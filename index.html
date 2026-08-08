@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Biochip HUD</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
+    <!-- Seu CSS Modular -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#131313] text-[#e5e2e1] overflow-hidden flex flex-col min-h-screen">
+    
+    <!-- Background Shader & Efeitos -->
+    <div class="bg-shader-container">
+        <canvas id="shader-canvas" class="block w-full h-full"></canvas>
+    </div>
+    <div class="noise-overlay"></div>
+    <div class="scanline"></div>
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 h-[80px] bg-[#131313]/80 backdrop-blur-md border-b border-[#d3fbff]/30 flex justify-between items-center px-6">
+        <div class="flex items-center gap-2 font-['Space_Grotesk'] text-2xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">memory</span>
+<span id="chip-id-display">CHIP_ID: AWAITING_NFC</span>
+        </div>
+        <div class="text-[#d3fbff]">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
+        </div>
+    </header>
+
+    <!-- Main Content (Foco no Terminal) -->
+    <main class="flex-1 mt-[80px] mb-[80px] p-4 relative z-10 flex flex-col gap-4">
+        <!-- Status da Conexão -->
+        <div class="border border-[#00eefc]/50 p-4 bg-[#201f1f]/40 backdrop-blur-sm shadow-[0_0_15px_rgba(0,238,252,0.1)] relative">
+            <div class="absolute top-0 right-0 p-1 text-[#d3fbff]/70 border-b border-l border-[#d3fbff]/50 font-['JetBrains_Mono'] text-xs uppercase tracking-widest font-bold">SYS.ST: ON</div>
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 rounded-full bg-[#00ff41] shadow-[0_0_10px_#00ff41] animate-[pulse-fast_1s_infinite]"></div>
+                    <h2 class="font-['Space_Grotesk'] text-2xl text-white tracking-widest uppercase drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">Neural Link</h2>
+                </div>
+                <span class="font-['JetBrains_Mono'] text-sm text-[#7df4ff]">STABLE</span>
+            </div>
+        </div>
+
+        <!-- Terminal de Diagnóstico Expandido -->
+        <section class="flex-1 border border-[#4a4732] bg-[#0e0e0e]/80 p-4 relative overflow-hidden flex flex-col shadow-inner">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#131313] to-transparent pointer-events-none z-10"></div>
+            <div class="font-['JetBrains_Mono'] text-sm text-[#00eefc] mb-2 uppercase tracking-widest border-b border-[#4a4732] pb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">terminal</span> Output Log
+            </div>
+            <div id="diag-scroll" class="flex flex-col gap-1 font-['JetBrains_Mono'] text-xs text-[#ccc7ab]/80 tracking-tight overflow-y-auto z-0 flex-1">
+                <div>[SYSTEM] Link estabelecido. Aguardando input do Tasker...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- BottomNavBar (Controles Táticos) -->
+    <nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-[#0e0e0e] border-t-2 border-[#4a4732] shadow-[0_-4px_10px_rgba(0,238,252,0.15)] hazard-bg h-[80px] font-['JetBrains_Mono'] text-xs uppercase font-bold tracking-widest">
+        <div class="nav-item flex flex-col items-center justify-center text-[#ccc7ab]/60 p-2 cursor-pointer transition-all hover:text-white" onclick="handleAction('hud=:=nav_link', this)">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">content_copy</span>
+            <span class="mt-1">CLONE ID</span>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center text-[#ccc7ab]/60 p-2 cursor-pointer transition-all hover:text-white" onclick="handleAction('hud=:=nav_comms', this)">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
+            <span class="mt-1">COMMS</span>
+        </div>
+        <div class="nav-item flex flex-col items-center justify-center text-[#ccc7ab]/60 p-2 cursor-pointer transition-all hover:text-white" onclick="handleAction('hud=:=nav_tether', this)">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">wifi_tethering</span>
+            <span class="mt-1">TETHER</span>
+        </div>
+        <!-- Inicia com DIAG ativo visualmente -->
+        <div class="nav-item active flex flex-col items-center justify-center text-[#00686f] bg-[#00eefc] shadow-[inset_0_0_0_1px_#d3fbff] p-2 cursor-pointer" onclick="handleAction('hud=:=nav_diag', this)">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+            <span class="mt-1">DIAG</span>
+        </div>
+    </nav>
+
+    <!-- Seu JavaScript Modular -->
+    <script src="app.js"></script>
+</body>
+</html>
